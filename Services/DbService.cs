@@ -12,6 +12,7 @@ public class DbService
     {
         _cs = config.GetConnectionString("DefaultConnection")
               ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection not configured.");
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
     private SqlConnection Conn() => new(_cs);
