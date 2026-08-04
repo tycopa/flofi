@@ -8,7 +8,7 @@ CREATE TABLE accounts (
     email               NVARCHAR(200) NOT NULL UNIQUE,
     phone               NVARCHAR(30)  NULL,
     country             NCHAR(2)      NOT NULL DEFAULT 'US',
-    password_hash       NVARCHAR(MAX) NOT NULL,
+    password_hash       NVARCHAR(255) NOT NULL,
     is_admin            BIT           NOT NULL DEFAULT 0,
     is_disabled         BIT           NOT NULL DEFAULT 0,
     theme               NVARCHAR(20)  NOT NULL DEFAULT 'orange',
@@ -19,7 +19,7 @@ CREATE TABLE accounts (
 CREATE TABLE remember_tokens (
     id          INT IDENTITY(1,1) PRIMARY KEY,
     account_id  INT           NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    token       NVARCHAR(MAX) NOT NULL UNIQUE,
+    token       NVARCHAR(64)  NOT NULL UNIQUE,
     expires_at  DATETIMEOFFSET NOT NULL,
     created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
@@ -27,7 +27,7 @@ CREATE TABLE remember_tokens (
 CREATE TABLE password_resets (
     id          INT IDENTITY(1,1) PRIMARY KEY,
     account_id  INT           NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    token       NVARCHAR(MAX) NOT NULL UNIQUE,
+    token       NVARCHAR(64)  NOT NULL UNIQUE,
     expires_at  DATETIMEOFFSET NOT NULL,
     created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
