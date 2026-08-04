@@ -19,8 +19,7 @@ jobs:
 
       - name: Deploy to IIS web root
         run: |
-          $dest = "${{ vars.IIS_WEBROOT }}"
-          if (-not $dest) { throw "IIS_WEBROOT variable is not set." }
+          $dest = "C:\daubery\flofi.me"
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           robocopy ./publish $dest /MIR /NP /NFL /NDL
           if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }

@@ -1,7 +1,7 @@
 using FloFi.Models;
 using FloFi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace FloFi.Pages;
 
@@ -31,7 +31,7 @@ public class CategoriesModel : PageModelBase
             await Db.AddCategoryAsync(Me!.Id, type, name);
             TempData["Flash"] = $"Category <b>{name}</b> added to <b>{System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(type)}</b>.";
         }
-        catch (PostgresException ex) when (ex.SqlState == "23505")
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
         { TempData["Error"] = $"⚠️ Category <b>{name}</b> already exists under <b>{System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(type)}</b>."; }
 
         return RedirectToPage();

@@ -1,66 +1,66 @@
--- FloFi personal budget tracker schema (PostgreSQL)
--- Run once against your database to create all tables.
+-- FloFi personal budget tracker schema (SQL Server)
+-- Run once: sqlcmd -S localhost -d flofi -i schema.sql
 
-CREATE TABLE IF NOT EXISTS accounts (
-    id                  SERIAL PRIMARY KEY,
-    username            VARCHAR(60)  NOT NULL UNIQUE,
-    full_name           VARCHAR(120) NOT NULL,
-    email               VARCHAR(200) NOT NULL UNIQUE,
-    phone               VARCHAR(30),
-    country             CHAR(2)      NOT NULL DEFAULT 'US',
-    password_hash       TEXT         NOT NULL,
-    is_admin            BOOLEAN      NOT NULL DEFAULT false,
-    is_disabled         BOOLEAN      NOT NULL DEFAULT false,
-    theme               VARCHAR(20)  NOT NULL DEFAULT 'orange',
-    must_reset_password BOOLEAN      NOT NULL DEFAULT false,
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+CREATE TABLE accounts (
+    id                  INT IDENTITY(1,1) PRIMARY KEY,
+    username            NVARCHAR(60)  NOT NULL UNIQUE,
+    full_name           NVARCHAR(120) NOT NULL,
+    email               NVARCHAR(200) NOT NULL UNIQUE,
+    phone               NVARCHAR(30)  NULL,
+    country             NCHAR(2)      NOT NULL DEFAULT 'US',
+    password_hash       NVARCHAR(MAX) NOT NULL,
+    is_admin            BIT           NOT NULL DEFAULT 0,
+    is_disabled         BIT           NOT NULL DEFAULT 0,
+    theme               NVARCHAR(20)  NOT NULL DEFAULT 'orange',
+    must_reset_password BIT           NOT NULL DEFAULT 0,
+    created_at          DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
 
-CREATE TABLE IF NOT EXISTS remember_tokens (
-    id          SERIAL PRIMARY KEY,
-    account_id  INT         NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    token       TEXT        NOT NULL UNIQUE,
-    expires_at  TIMESTAMPTZ NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE remember_tokens (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    account_id  INT           NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    token       NVARCHAR(MAX) NOT NULL UNIQUE,
+    expires_at  DATETIMEOFFSET NOT NULL,
+    created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
 
-CREATE TABLE IF NOT EXISTS password_resets (
-    id          SERIAL PRIMARY KEY,
-    account_id  INT         NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    token       TEXT        NOT NULL UNIQUE,
-    expires_at  TIMESTAMPTZ NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE password_resets (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    account_id  INT           NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    token       NVARCHAR(MAX) NOT NULL UNIQUE,
+    expires_at  DATETIMEOFFSET NOT NULL,
+    created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
 
-CREATE TABLE IF NOT EXISTS categories (
-    id          SERIAL PRIMARY KEY,
-    account_id  INT         NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    type        VARCHAR(10) NOT NULL CHECK (type IN ('revenue','expense')),
-    name        VARCHAR(100) NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (account_id, type, name)
+CREATE TABLE categories (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    account_id  INT           NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    type        NVARCHAR(10)  NOT NULL CHECK (type IN ('revenue','expense')),
+    name        NVARCHAR(100) NOT NULL,
+    created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT uq_categories UNIQUE (account_id, type, name)
 );
 
-CREATE TABLE IF NOT EXISTS transactions (
-    id           SERIAL PRIMARY KEY,
-    account_id   INT         NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    category_id  INT         NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
-    type         VARCHAR(10) NOT NULL CHECK (type IN ('revenue','expense')),
-    amount_cents INT         NOT NULL CHECK (amount_cents > 0),
-    note         VARCHAR(255),
-    tx_date      DATE        NOT NULL DEFAULT CURRENT_DATE,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE transactions (
+    id           INT IDENTITY(1,1) PRIMARY KEY,
+    account_id   INT           NOT NULL REFERENCES accounts(id) ON DELETE NO ACTION,
+    category_id  INT           NOT NULL REFERENCES categories(id) ON DELETE NO ACTION,
+    type         NVARCHAR(10)  NOT NULL CHECK (type IN ('revenue','expense')),
+    amount_cents INT           NOT NULL CHECK (amount_cents > 0),
+    note         NVARCHAR(255) NULL,
+    tx_date      DATE          NOT NULL DEFAULT CAST(GETUTCDATE() AS DATE),
+    created_at   DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );
 
-CREATE INDEX IF NOT EXISTS idx_transactions_account_date ON transactions (account_id, tx_date DESC);
-CREATE INDEX IF NOT EXISTS idx_transactions_category     ON transactions (category_id);
+CREATE INDEX idx_transactions_account_date ON transactions (account_id, tx_date DESC);
+CREATE INDEX idx_transactions_category     ON transactions (category_id);
 
-CREATE TABLE IF NOT EXISTS admin_log (
-    id          SERIAL PRIMARY KEY,
-    admin_id    INT,
-    admin_name  VARCHAR(120) NOT NULL,
-    action      TEXT         NOT NULL,
-    target_user INT,
-    details     TEXT,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+CREATE TABLE admin_log (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    admin_id    INT           NULL,
+    admin_name  NVARCHAR(120) NOT NULL,
+    action      NVARCHAR(MAX) NOT NULL,
+    target_user INT           NULL,
+    details     NVARCHAR(MAX) NULL,
+    created_at  DATETIMEOFFSET NOT NULL DEFAULT GETUTCDATE()
 );

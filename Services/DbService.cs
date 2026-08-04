@@ -1,6 +1,6 @@
 using Dapper;
 using FloFi.Models;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace FloFi.Services;
 
@@ -14,7 +14,7 @@ public class DbService
               ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection not configured.");
     }
 
-    private NpgsqlConnection Conn() => new(_cs);
+    private SqlConnection Conn() => new(_cs);
 
     public async Task<Account?> GetAccountByIdAsync(int id)
     {
@@ -28,7 +28,7 @@ public class DbService
     {
         using var db = Conn();
         return await db.QueryFirstOrDefaultAsync<Account>(
-            "SELECT id, username, full_name, email, phone, country, password_hash, is_admin, is_disabled, theme, must_reset_password FROM accounts WHERE username=@username LIMIT 1",
+            "SELECT TOP 1 id, username, full_name, email, phone, country, password_hash, is_admin, is_disabled, theme, must_reset_password FROM accounts WHERE username=@username",
             new { username });
     }
 
@@ -36,11 +36,11 @@ public class DbService
     {
         using var db = Conn();
         return await db.QueryFirstOrDefaultAsync<Account>(
-            @"SELECT a.id, a.username, a.full_name, a.email, a.phone, a.country, a.password_hash,
+            @"SELECT TOP 1 a.id, a.username, a.full_name, a.email, a.phone, a.country, a.password_hash,
                      a.is_admin, a.is_disabled, a.theme, a.must_reset_password, r.expires_at
               FROM remember_tokens r
               JOIN accounts a ON a.id = r.account_id
-              WHERE r.token = @token LIMIT 1",
+              WHERE r.token = @token",
             new { token });
     }
 
@@ -49,7 +49,8 @@ public class DbService
         using var db = Conn();
         return await db.ExecuteScalarAsync<int>(
             @"INSERT INTO accounts (username, full_name, email, phone, country, password_hash)
-              VALUES (@username, @fullName, @email, @phone, @country, @passwordHash) RETURNING id",
+              VALUES (@username, @fullName, @email, @phone, @country, @passwordHash);
+              SELECT CAST(SCOPE_IDENTITY() AS INT);",
             new { username, fullName, email, phone, country, passwordHash });
     }
 
@@ -65,7 +66,7 @@ public class DbService
     {
         using var db = Conn();
         await db.ExecuteAsync(
-            "UPDATE accounts SET password_hash=@passwordHash, must_reset_password=false WHERE id=@id",
+            "UPDATE accounts SET password_hash=@passwordHash, must_reset_password=0 WHERE id=@id",
             new { id, passwordHash });
     }
 
@@ -115,7 +116,7 @@ public class DbService
                      c.name AS cat_name, c.type AS cat_type
               FROM transactions t
               JOIN categories c ON c.id = t.category_id
-              WHERE t.account_id = @accountId AND to_char(t.tx_date, 'YYYY-MM') = @month
+              WHERE t.account_id = @accountId AND FORMAT(t.tx_date, 'yyyy-MM') = @month
               ORDER BY t.tx_date DESC, t.id DESC",
             new { accountId, month });
     }
@@ -140,13 +141,14 @@ public class DbService
     {
         using var db = Conn();
         return await db.QueryAsync(
-            @"SELECT to_char(tx_date,'MM') AS mon,
+            @"SELECT FORMAT(tx_date, 'MM') AS mon,
                      SUM(CASE WHEN c.type='revenue' THEN t.amount_cents ELSE 0 END) AS revenue,
                      SUM(CASE WHEN c.type='expense' THEN t.amount_cents ELSE 0 END) AS expense
               FROM transactions t
               JOIN categories c ON c.id = t.category_id
-              WHERE t.account_id = @accountId AND EXTRACT(YEAR FROM t.tx_date) = @year
-              GROUP BY mon ORDER BY mon",
+              WHERE t.account_id = @accountId AND YEAR(t.tx_date) = @year
+              GROUP BY FORMAT(tx_date, 'MM')
+              ORDER BY mon",
             new { accountId, year });
     }
 
@@ -157,7 +159,7 @@ public class DbService
             @"SELECT c.name, c.type, SUM(t.amount_cents) AS total
               FROM transactions t
               JOIN categories c ON c.id = t.category_id
-              WHERE t.account_id = @accountId AND EXTRACT(YEAR FROM t.tx_date) = @year
+              WHERE t.account_id = @accountId AND YEAR(t.tx_date) = @year
               GROUP BY c.name, c.type ORDER BY c.type, total DESC",
             new { accountId, year });
     }
@@ -166,14 +168,14 @@ public class DbService
     {
         using var db = Conn();
         return await db.QueryFirstOrDefaultAsync<int?>(
-            "SELECT id FROM accounts WHERE email=@email LIMIT 1", new { email });
+            "SELECT TOP 1 id FROM accounts WHERE email=@email", new { email });
     }
 
     public async Task<string?> GetAccountFullNameByEmailAsync(string email)
     {
         using var db = Conn();
         return await db.QueryFirstOrDefaultAsync<string>(
-            "SELECT full_name FROM accounts WHERE email=@email LIMIT 1", new { email });
+            "SELECT TOP 1 full_name FROM accounts WHERE email=@email", new { email });
     }
 
     public async Task UpsertPasswordResetAsync(int accountId, string token, DateTime expiresAt)
@@ -189,7 +191,7 @@ public class DbService
     {
         using var db = Conn();
         return await db.QueryFirstOrDefaultAsync<int?>(
-            "SELECT account_id FROM password_resets WHERE token=@token AND expires_at > NOW() LIMIT 1",
+            "SELECT TOP 1 account_id FROM password_resets WHERE token=@token AND expires_at > GETUTCDATE()",
             new { token });
     }
 

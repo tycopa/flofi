@@ -1,7 +1,7 @@
 using BCrypt.Net;
 using FloFi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace FloFi.Pages;
 
@@ -68,7 +68,7 @@ public class IndexModel : PageModelBase
             TempData["Flash"] = $"Welcome to FloFi, {fullName}!";
             return RedirectToPage("/Dashboard");
         }
-        catch (PostgresException ex) when (ex.SqlState == "23505")
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
         { TempData["Error"] = "That username or email is already taken."; TempData["Tab"] = "signup"; return RedirectToPage(); }
     }
 
