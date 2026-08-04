@@ -1,0 +1,51 @@
+name: Deploy to IIS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # your Windows IIS machine with the GitHub Actions runner installed
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install Composer dependencies (PHP must be in PATH on the runner)
+      - name: Install Composer dependencies
+        run: |
+          php composer.phar install --no-dev --optimize-autoloader --no-interaction
+        shell: pwsh
+
+      # Copy files to the IIS web root
+      # Set IIS_WEBROOT in the repository's Actions secrets/variables, e.g.:
+      #   C:\inetpub\wwwroot\flofi
+      - name: Deploy files to IIS web root
+        run: |
+          $dest = "${{ vars.IIS_WEBROOT }}"
+          if (-not $dest) { throw "IIS_WEBROOT variable is not set." }
+
+          # Ensure destination exists
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+          # Robocopy: mirror everything except .git and .github
+          robocopy . $dest /MIR /XD .git .github /XF "*.md" /NP /NFL /NDL
+          # Robocopy exit codes 0-7 are success/warning; 8+ are errors
+          if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
+        shell: pwsh
+
+      # Optional: recycle the IIS app pool so PHP picks up any config changes
+      - name: Recycle IIS App Pool
+        run: |
+          $pool = "${{ vars.IIS_APP_POOL }}"
+          if ($pool) {
+            Import-Module WebAdministration -ErrorAction SilentlyContinue
+            Restart-WebAppPool -Name $pool
+            Write-Host "Recycled app pool: $pool"
+          } else {
+            Write-Host "IIS_APP_POOL not set, skipping recycle."
+          }
+        shell: pwsh
+        continue-on-error: true
