@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using FloFi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,14 +35,14 @@ public class ProfileModel : PageModelBase
     {
         if (await RequireLoginAsync() == null) return Page();
         var user = await Db.GetAccountByIdAsync(Me!.Id);
-        if (user == null || !BCrypt.Verify(currentPassword, user.PasswordHash))
+        if (user == null || !BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
         { TempData["Error"] = "Current password is incorrect."; return RedirectToPage(); }
         if (newPassword.Length < 8)
         { TempData["Error"] = "New password must be at least 8 characters."; return RedirectToPage(); }
         if (newPassword != confirmPassword)
         { TempData["Error"] = "New passwords do not match."; return RedirectToPage(); }
 
-        await Db.UpdatePasswordAsync(Me!.Id, BCrypt.HashPassword(newPassword));
+        await Db.UpdatePasswordAsync(Me!.Id, BCrypt.Net.BCrypt.HashPassword(newPassword));
         TempData["Flash"] = "Password changed successfully.";
         return RedirectToPage();
     }

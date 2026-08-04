@@ -25,18 +25,18 @@
       var monthStr = $"{Model.Year}-{m:D2}";
       <tr>
         <td><a href="/Dashboard?month=@monthStr">@RecapModel.MonthNames[m-1]</a></td>
-        <td style="color:#2e7d32;font-weight:700">@Dollars((int)rev)</td>
-        <td style="color:#c62828;font-weight:700">@Dollars((int)exp)</td>
-        <td style="font-weight:700;color:@(net>=0?"#2e7d32":"#c62828")">@Dollars((int)net)</td>
+        <td style="color:#2e7d32;font-weight:700">@PageModelBase.Dollars((int)rev)</td>
+        <td style="color:#c62828;font-weight:700">@PageModelBase.Dollars((int)exp)</td>
+        <td style="font-weight:700;color:@(net>=0?"#2e7d32":"#c62828")">@PageModelBase.Dollars((int)net)</td>
       </tr>
     }
     </tbody>
     <tfoot>
       <tr style="font-weight:800;background:#fafafa">
         <td>Total</td>
-        <td style="color:#2e7d32">@Dollars((int)yrRev)</td>
-        <td style="color:#c62828">@Dollars((int)yrExp)</td>
-        <td style="color:@((yrRev-yrExp)>=0?"#2e7d32":"#c62828")">@Dollars((int)(yrRev-yrExp))</td>
+        <td style="color:#2e7d32">@PageModelBase.Dollars((int)yrRev)</td>
+        <td style="color:#c62828">@PageModelBase.Dollars((int)yrExp)</td>
+        <td style="color:@((yrRev-yrExp)>=0?"#2e7d32":"#c62828")">@PageModelBase.Dollars((int)(yrRev-yrExp))</td>
       </tr>
     </tfoot>
   </table>
@@ -55,7 +55,7 @@
       <tr>
         <td>@cr.name</td>
         <td style="color:@(cr.type=="revenue"?"#2e7d32":"#c62828");font-weight:700">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase((string)cr.type)</td>
-        <td style="font-weight:700">@Dollars((int)cr.total)</td>
+        <td style="font-weight:700">@PageModelBase.Dollars((int)cr.total)</td>
       </tr>
     }
     </tbody>
