@@ -13,16 +13,53 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Download Composer if not already cached on the runner, then install deps
-      - name: Install Composer dependencies
+      # Locate php.exe (not in runner PATH; find it from common locations or IIS config)
+      - name: Locate PHP and install Composer dependencies
         run: |
-          if (-not (Get-Command composer -ErrorAction SilentlyContinue)) {
-            $composerSetup = "$env:TEMP\composer-setup.php"
-            Invoke-WebRequest -Uri "https://getcomposer.org/installer" -OutFile $composerSetup
-            php $composerSetup --install-dir="$env:TEMP" --filename=composer
-            $env:PATH += ";$env:TEMP"
+          # 1. Use PHP_PATH variable if set in repo
+          $phpExe = "${{ vars.PHP_PATH }}"
+
+          # 2. Search common install locations
+          if (-not $phpExe -or -not (Test-Path $phpExe)) {
+            $candidates = @(
+              'C:\PHP\php.exe',
+              'C:\PHP8\php.exe',
+              'C:\PHP81\php.exe',
+              'C:\PHP82\php.exe',
+              'C:\PHP83\php.exe',
+              'C:\Program Files\PHP\php.exe',
+              'C:\Program Files (x86)\PHP\php.exe'
+            )
+            $phpExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           }
-          composer install --no-dev --optimize-autoloader --no-interaction
+
+          # 3. Fall back to IIS FastCGI registration
+          if (-not $phpExe) {
+            try {
+              Import-Module WebAdministration -ErrorAction Stop
+              $cgi = (Get-WebConfiguration 'system.webServer/fastCgi/application').fullPath |
+                     Where-Object { $_ -like '*php*' } | Select-Object -First 1
+              if ($cgi) { $phpExe = $cgi -replace 'php-cgi\.exe', 'php.exe' }
+            } catch {}
+          }
+
+          if (-not $phpExe) {
+            throw "Cannot locate php.exe. Add a PHP_PATH variable in repo Settings -> Variables (e.g. C:\PHP\php.exe)."
+          }
+
+          Write-Host "Using PHP: $phpExe"
+
+          # Download Composer if not in PATH
+          if (-not (Get-Command composer -ErrorAction SilentlyContinue)) {
+            $setup = "$env:TEMP\composer-setup.php"
+            Invoke-WebRequest -Uri 'https://getcomposer.org/installer' -OutFile $setup
+            & $phpExe $setup --install-dir="$env:TEMP" --filename=composer.phar
+            $composerCmd = "$env:TEMP\composer.phar"
+          } else {
+            $composerCmd = 'composer'
+          }
+
+          & $phpExe $composerCmd install --no-dev --optimize-autoloader --no-interaction
         shell: powershell
 
       # Copy files to the IIS web root
