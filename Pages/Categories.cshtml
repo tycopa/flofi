@@ -1,0 +1,47 @@
+@page
+@model CategoriesModel
+
+<main class="wrap" style="padding:18px 0 36px">
+@if (TempData["Flash"] != null) { <div class="card" style="background:#eaffea;border-color:#8bd98b">@Html.Raw(TempData["Flash"])</div> }
+@if (TempData["Error"] != null) { <div class="card" style="background:#ffecec;border-color:#f28b82"><strong>@Html.Raw(TempData["Error"])</strong></div> }
+
+<div class="card">
+  <h2>Add Category</h2>
+  <form method="post" asp-page-handler="Add" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+    <div class="field" style="flex:1;max-width:200px">
+      <label>Type</label>
+      <select name="type" required>
+        <option value="revenue">Revenue</option>
+        <option value="expense">Expense</option>
+      </select>
+    </div>
+    <div class="field" style="flex:1;max-width:200px">
+      <label>Category Name</label>
+      <input type="text" name="name" placeholder="Category Name" required>
+    </div>
+    <button class="btn" style="margin-left:10px">Add</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Your Categories</h2>
+  <table class="table">
+    <thead><tr><th>Type</th><th>Name</th><th></th></tr></thead>
+    <tbody>
+    @if (!Model.Cats.Any()) { <tr><td colspan="3">None yet.</td></tr> }
+    @foreach (var c in Model.Cats) {
+      <tr>
+        <td>@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(c.Type)</td>
+        <td>@c.Name</td>
+        <td>
+          <form method="post" asp-page-handler="Delete" style="display:inline" onsubmit="return confirm('Delete this category?')">
+            <input type="hidden" name="id" value="@c.Id">
+            <button class="btn ghost">🗑️</button>
+          </form>
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+</main>

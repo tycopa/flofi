@@ -1,0 +1,33 @@
+@page
+@model ResetModel
+
+<main class="wrap" style="max-width:500px">
+@if (TempData["Flash"] != null) { <div class="card" style="background:#eaffea;border-color:#8bd98b">@TempData["Flash"]</div> }
+@if (TempData["Error"] != null) { <div class="card" style="background:#ffecec;border-color:#f28b82"><strong>@TempData["Error"]</strong></div> }
+
+<div class="card">
+@if (Model.IsForced) {
+  <h2>You must set a new password</h2>
+  <form method="post" asp-page-handler="ForceReset">
+    <div class="field"><label>New Password</label><input type="password" name="newPassword" required minlength="8" autocomplete="new-password"></div>
+    <div class="field"><label>Confirm Password</label><input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password"></div>
+    <button class="btn">Set Password</button>
+  </form>
+} else if (!string.IsNullOrEmpty(Model.Token)) {
+  <h2>Set New Password</h2>
+  <form method="post" asp-page-handler="DoReset">
+    <input type="hidden" name="token" value="@Model.Token">
+    <div class="field"><label>New Password</label><input type="password" name="newPassword" required minlength="8" autocomplete="new-password"></div>
+    <div class="field"><label>Confirm Password</label><input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password"></div>
+    <button class="btn">Set Password</button>
+  </form>
+} else {
+  <h2>Forgot Password</h2>
+  <form method="post" asp-page-handler="Request">
+    <div class="field"><label>Your Email Address</label><input type="email" name="email" required autocomplete="email"></div>
+    <button class="btn">Send Reset Link</button>
+  </form>
+  <p class="small" style="margin-top:12px"><a href="/">Back to sign in</a></p>
+}
+</div>
+</main>

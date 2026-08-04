@@ -1,0 +1,43 @@
+@page
+@model ProfileModel
+
+<main class="wrap" style="padding:18px 0 36px">
+@if (TempData["Flash"] != null) { <div class="card" style="background:#eaffea;border-color:#8bd98b">@TempData["Flash"]</div> }
+@if (TempData["Error"] != null) { <div class="card" style="background:#ffecec;border-color:#f28b82"><strong>@TempData["Error"]</strong></div> }
+
+<div class="card">
+  <h2>Profile</h2>
+  <form method="post" asp-page-handler="Profile">
+    <div class="field"><label>Full Name</label><input type="text" name="fullName" value="@Model.Me?.FullName" required></div>
+    <div class="field"><label>Email</label><input type="email" name="email" value="@Model.Me?.Email" required></div>
+    <div class="field">
+      <label>Country</label>
+      <select name="country">
+        @foreach (var kvp in PageModelBase.Countries) {
+          <option value="@kvp.Key" selected="@(kvp.Key == (Model.Me?.Country ?? "US"))">@kvp.Value</option>
+        }
+      </select>
+    </div>
+    <div class="field"><label>Phone</label><input type="tel" name="phone" value="@Model.Me?.Phone"></div>
+    <div class="field">
+      <label>Theme</label>
+      <select name="theme">
+        @foreach (var t in ProfileModel.Themes) {
+          <option value="@t" selected="@(t == (Model.Me?.Theme ?? "orange"))">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(t)</option>
+        }
+      </select>
+    </div>
+    <button class="btn">Save Profile</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Change Password</h2>
+  <form method="post" asp-page-handler="Password">
+    <div class="field"><label>Current Password</label><input type="password" name="currentPassword" required autocomplete="current-password"></div>
+    <div class="field"><label>New Password</label><input type="password" name="newPassword" required autocomplete="new-password" minlength="8"></div>
+    <div class="field"><label>Confirm New Password</label><input type="password" name="confirmPassword" required autocomplete="new-password" minlength="8"></div>
+    <button class="btn">Change Password</button>
+  </form>
+</div>
+</main>

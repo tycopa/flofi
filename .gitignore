@@ -1,6 +1,9 @@
-vendor/
-composer.phar
-.env
-*.env
+bin/
+obj/
+publish/
+*.user
+.vs/
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
 *.log
-/uploads/

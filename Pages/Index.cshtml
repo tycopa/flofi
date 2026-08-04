@@ -1,0 +1,63 @@
+@page
+@model IndexModel
+@{ ViewData["Title"] = "Welcome"; }
+
+<main class="wrap" style="max-width:600px">
+@if (TempData["Flash"] != null) {
+  <div class="card" style="background:#eaffea;border-color:#8bd98b">@TempData["Flash"]</div>
+}
+@if (TempData["Error"] != null) {
+  <div class="card" style="background:#ffecec;border-color:#f28b82"><strong>@TempData["Error"]</strong></div>
+}
+
+<div class="card" style="text-align:center;padding:32px 18px">
+  <div style="font-size:48px;margin-bottom:8px">💰</div>
+  <h1 style="margin:0 0 8px;font-size:28px;color:var(--burnt)">FloFi</h1>
+  <p style="margin:0;color:#555;font-size:14px">Your personal budget tracker. Track income &amp; expenses, set categories, and see where your money goes.</p>
+</div>
+
+<div class="card">
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn" id="tab-login" onclick="showTab('login')">Sign In</button>
+    <button class="btn ghost" id="tab-signup" onclick="showTab('signup')">Create Account</button>
+  </div>
+
+  <form method="post" id="form-login" asp-page-handler="Login">
+    <div class="field"><label>Username</label><input type="text" name="username" required autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required autocomplete="current-password"></div>
+    <label style="font-size:12px;display:flex;align-items:center;gap:6px;margin:8px 0">
+      <input type="checkbox" name="remember"> Remember me for 30 days
+    </label>
+    <button class="btn" style="margin-top:8px">Sign In</button>
+  </form>
+
+  <form method="post" id="form-signup" asp-page-handler="Signup" style="display:none">
+    <div class="field"><label>Full Name</label><input type="text" name="fullName" required></div>
+    <div class="field"><label>Username</label><input type="text" name="username" required autocomplete="username"></div>
+    <div class="field"><label>Email</label><input type="email" name="email" required></div>
+    <div class="field">
+      <label>Country</label>
+      <select name="country">
+        @foreach (var kvp in PageModelBase.Countries) {
+          <option value="@kvp.Key" selected="@(kvp.Key == "US")">@kvp.Value</option>
+        }
+      </select>
+    </div>
+    <div class="field"><label>Phone (optional)</label><input type="tel" name="phone"></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required autocomplete="new-password" minlength="8"></div>
+    <div class="field"><label>Confirm Password</label><input type="password" name="password2" required autocomplete="new-password" minlength="8"></div>
+    <button class="btn" style="margin-top:8px">Create Account</button>
+  </form>
+</div>
+</main>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('#form-login,#form-signup').forEach(f => f.style.display = 'none');
+  document.getElementById('form-' + id).style.display = '';
+  document.getElementById('tab-login').className  = 'btn' + (id === 'login'  ? '' : ' ghost');
+  document.getElementById('tab-signup').className = 'btn' + (id === 'signup' ? '' : ' ghost');
+}
+var activeTab = '@(TempData["Tab"] ?? "login")';
+showTab(activeTab);
+</script>

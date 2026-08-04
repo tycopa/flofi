@@ -1,0 +1,105 @@
+@page
+@model DashboardModel
+
+<main class="wrap" style="padding:18px 0 36px">
+@if (TempData["Flash"] != null) { <div class="card" style="background:#eaffea;border-color:#8bd98b">@TempData["Flash"]</div> }
+@if (TempData["Error"] != null) { <div class="card" style="background:#ffecec;border-color:#f28b82"><strong>@TempData["Error"]</strong></div> }
+
+<div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+  <div style="flex:1;min-width:120px">
+    <div class="small">Revenue</div>
+    <div style="font-size:20px;font-weight:800;color:#2e7d32">@Dollars(Model.TotalRevenue)</div>
+  </div>
+  <div style="flex:1;min-width:120px">
+    <div class="small">Expenses</div>
+    <div style="font-size:20px;font-weight:800;color:#c62828">@Dollars(Model.TotalExpense)</div>
+  </div>
+  <div style="flex:1;min-width:120px">
+    <div class="small">Net</div>
+    <div style="font-size:20px;font-weight:800;color:@(Model.Net >= 0 ? "#2e7d32" : "#c62828")">@Dollars(Model.Net)</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <a href="?month=@Model.PrevMonth" class="btn ghost sm">‹</a>
+    <strong style="font-size:14px">@Model.MonthLabel</strong>
+    <a href="?month=@Model.NextMonth" class="btn ghost sm">›</a>
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Add Transaction</h2>
+  @if (!Model.RevCats.Any() && !Model.ExpCats.Any()) {
+    <p>No categories yet. <a href="/Categories">Add some categories</a> first.</p>
+  } else {
+  <form method="post" asp-page-handler="AddTx" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+    <div class="field" style="flex:1;min-width:120px;max-width:160px">
+      <label>Type</label>
+      <select name="type" id="tx-type" onchange="filterCats(this.value)">
+        <option value="revenue">Revenue</option>
+        <option value="expense">Expense</option>
+      </select>
+    </div>
+    <div class="field" style="flex:1;min-width:160px;max-width:220px">
+      <label>Category</label>
+      <select name="categoryId" id="cat-select">
+        <optgroup label="Revenue" id="grp-revenue">
+          @foreach (var c in Model.RevCats) { <option value="@c.Id">@c.Name</option> }
+        </optgroup>
+        <optgroup label="Expense" id="grp-expense">
+          @foreach (var c in Model.ExpCats) { <option value="@c.Id">@c.Name</option> }
+        </optgroup>
+      </select>
+    </div>
+    <div class="field" style="flex:1;min-width:120px;max-width:160px">
+      <label>Amount ($)</label>
+      <input type="number" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
+    </div>
+    <div class="field" style="flex:1;min-width:120px;max-width:160px">
+      <label>Date</label>
+      <input type="date" name="txDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+    </div>
+    <div class="field" style="flex:2;min-width:160px">
+      <label>Note</label>
+      <input type="text" name="note" placeholder="Optional note" maxlength="255">
+    </div>
+    <button class="btn">Add</button>
+  </form>
+  }
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Transactions — @Model.MonthLabel</h2>
+  <table class="table">
+    <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+    <tbody>
+    @if (!Model.Transactions.Any()) { <tr><td colspan="6">No transactions this month.</td></tr> }
+    @foreach (var tx in Model.Transactions) {
+      <tr>
+        <td>@tx.TxDate.ToString("yyyy-MM-dd")</td>
+        <td style="color:@(tx.CatType=="revenue"?"#2e7d32":"#c62828");font-weight:700">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(tx.CatType)</td>
+        <td>@tx.CatName</td>
+        <td style="font-weight:700">@tx.Dollars</td>
+        <td>@tx.Note</td>
+        <td>
+          <form method="post" asp-page-handler="DeleteTx" style="display:inline" onsubmit="return confirm('Delete this transaction?')">
+            <input type="hidden" name="txId" value="@tx.Id">
+            <button class="btn ghost sm">🗑️</button>
+          </form>
+        </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+</main>
+<script>
+function filterCats(type) {
+  var grpR = document.getElementById('grp-revenue');
+  var grpE = document.getElementById('grp-expense');
+  var sel  = document.getElementById('cat-select');
+  grpR.style.display = type === 'revenue' ? '' : 'none';
+  grpE.style.display = type === 'expense' ? '' : 'none';
+  var visible = type === 'revenue' ? grpR : grpE;
+  if (visible.options.length) sel.value = visible.options[0].value;
+}
+filterCats('revenue');
+</script>

@@ -1,0 +1,66 @@
+@page
+@model RecapModel
+@{
+    long yrRev = 0, yrExp = 0;
+}
+
+<main class="wrap" style="padding:18px 0 36px">
+<div class="card" style="display:flex;align-items:center;gap:12px">
+  <a href="?year=@(Model.Year-1)" class="btn ghost sm">‹ @(Model.Year-1)</a>
+  <h2 style="margin:0;flex:1;text-align:center">@Model.Year Year in Review</h2>
+  <a href="?year=@(Model.Year+1)" class="btn ghost sm">@(Model.Year+1) ›</a>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Monthly Breakdown</h2>
+  <div style="overflow-x:auto">
+  <table class="table">
+    <thead><tr><th>Month</th><th style="color:#2e7d32">Revenue</th><th style="color:#c62828">Expenses</th><th>Net</th></tr></thead>
+    <tbody>
+    @for (int m = 1; m <= 12; m++) {
+      var rev = Model.ByMonth.TryGetValue(m, out var v) ? v.Revenue : 0;
+      var exp = Model.ByMonth.TryGetValue(m, out var v2) ? v2.Expense : 0;
+      var net = rev - exp;
+      yrRev += rev; yrExp += exp;
+      var monthStr = $"{Model.Year}-{m:D2}";
+      <tr>
+        <td><a href="/Dashboard?month=@monthStr">@RecapModel.MonthNames[m-1]</a></td>
+        <td style="color:#2e7d32;font-weight:700">@Dollars((int)rev)</td>
+        <td style="color:#c62828;font-weight:700">@Dollars((int)exp)</td>
+        <td style="font-weight:700;color:@(net>=0?"#2e7d32":"#c62828")">@Dollars((int)net)</td>
+      </tr>
+    }
+    </tbody>
+    <tfoot>
+      <tr style="font-weight:800;background:#fafafa">
+        <td>Total</td>
+        <td style="color:#2e7d32">@Dollars((int)yrRev)</td>
+        <td style="color:#c62828">@Dollars((int)yrExp)</td>
+        <td style="color:@((yrRev-yrExp)>=0?"#2e7d32":"#c62828")">@Dollars((int)(yrRev-yrExp))</td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+</div>
+
+@{ var catList = Model.CatRows.Cast<dynamic>().ToList(); }
+@if (catList.Any()) {
+<div class="card">
+  <h2 style="margin-top:0">By Category</h2>
+  <div style="overflow-x:auto">
+  <table class="table">
+    <thead><tr><th>Category</th><th>Type</th><th>Total</th></tr></thead>
+    <tbody>
+    @foreach (var cr in catList) {
+      <tr>
+        <td>@cr.name</td>
+        <td style="color:@(cr.type=="revenue"?"#2e7d32":"#c62828");font-weight:700">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase((string)cr.type)</td>
+        <td style="font-weight:700">@Dollars((int)cr.total)</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+  </div>
+</div>
+}
+</main>
