@@ -13,10 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Install Composer dependencies (PHP must be in PATH on the runner)
+      # Download Composer if not already cached on the runner, then install deps
       - name: Install Composer dependencies
         run: |
-          php composer.phar install --no-dev --optimize-autoloader --no-interaction
+          if (-not (Get-Command composer -ErrorAction SilentlyContinue)) {
+            $composerSetup = "$env:TEMP\composer-setup.php"
+            Invoke-WebRequest -Uri "https://getcomposer.org/installer" -OutFile $composerSetup
+            php $composerSetup --install-dir="$env:TEMP" --filename=composer
+            $env:PATH += ";$env:TEMP"
+          }
+          composer install --no-dev --optimize-autoloader --no-interaction
         shell: pwsh
 
       # Copy files to the IIS web root
