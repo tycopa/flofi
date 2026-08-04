@@ -23,6 +23,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           robocopy ./publish $dest /MIR /NP /NFL /NDL
           if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
+          exit 0
         shell: powershell
 
       - name: Recycle IIS App Pool
