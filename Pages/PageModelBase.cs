@@ -81,7 +81,7 @@ public abstract class PageModelBase : PageModel
         ViewData["Me"] = user;
     }
 
-    protected static string Dollars(int cents) => "$" + (cents / 100m).ToString("0.00");
+    public static string Dollars(int cents) => "$" + (cents / 100m).ToString("0.00");
 
     protected static string RandomHex(int bytes = 32) =>
         Convert.ToHexString(RandomNumberGenerator.GetBytes(bytes)).ToLower();

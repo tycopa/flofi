@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using FloFi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,7 +46,7 @@ public class ResetModel : PageModelBase
         var uid = await Db.ValidateResetTokenAsync(token);
         if (!uid.HasValue) { TempData["Error"] = "Invalid or expired reset link."; return Page(); }
 
-        await Db.UpdatePasswordAsync(uid.Value, BCrypt.HashPassword(newPassword));
+        await Db.UpdatePasswordAsync(uid.Value, BCrypt.Net.BCrypt.HashPassword(newPassword));
         await Db.DeletePasswordResetsByAccountAsync(uid.Value);
         HttpContext.Session.Clear();
         TempData["Flash"] = "Password updated. Please sign in.";
@@ -61,7 +60,7 @@ public class ResetModel : PageModelBase
         if (newPassword.Length < 8) { TempData["Error"] = "Password must be at least 8 characters."; IsForced = true; return Page(); }
         if (newPassword != confirmPassword) { TempData["Error"] = "Passwords do not match."; IsForced = true; return Page(); }
 
-        await Db.UpdatePasswordAsync(user.Id, BCrypt.HashPassword(newPassword));
+        await Db.UpdatePasswordAsync(user.Id, BCrypt.Net.BCrypt.HashPassword(newPassword));
         TempData["Flash"] = "Password updated.";
         return RedirectToPage("/Dashboard");
     }

@@ -8,15 +8,15 @@
 <div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
   <div style="flex:1;min-width:120px">
     <div class="small">Revenue</div>
-    <div style="font-size:20px;font-weight:800;color:#2e7d32">@Dollars(Model.TotalRevenue)</div>
+    <div style="font-size:20px;font-weight:800;color:#2e7d32">@PageModelBase.Dollars(Model.TotalRevenue)</div>
   </div>
   <div style="flex:1;min-width:120px">
     <div class="small">Expenses</div>
-    <div style="font-size:20px;font-weight:800;color:#c62828">@Dollars(Model.TotalExpense)</div>
+    <div style="font-size:20px;font-weight:800;color:#c62828">@PageModelBase.Dollars(Model.TotalExpense)</div>
   </div>
   <div style="flex:1;min-width:120px">
     <div class="small">Net</div>
-    <div style="font-size:20px;font-weight:800;color:@(Model.Net >= 0 ? "#2e7d32" : "#c62828")">@Dollars(Model.Net)</div>
+    <div style="font-size:20px;font-weight:800;color:@(Model.Net >= 0 ? "#2e7d32" : "#c62828")">@PageModelBase.Dollars(Model.Net)</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <a href="?month=@Model.PrevMonth" class="btn ghost sm">‹</a>

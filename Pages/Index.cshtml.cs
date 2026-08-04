@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using FloFi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -22,7 +21,7 @@ public class IndexModel : PageModelBase
     public async Task<IActionResult> OnPostLoginAsync(string username, string password, bool remember)
     {
         var user = await Db.GetAccountByUsernameAsync(username ?? "");
-        if (user == null || !BCrypt.Verify(password ?? "", user.PasswordHash))
+        if (user == null || !BCrypt.Net.BCrypt.Verify(password ?? "", user.PasswordHash))
         { TempData["Error"] = "Invalid username or password."; TempData["Tab"] = "login"; return RedirectToPage(); }
         if (user.IsDisabled)
         { TempData["Error"] = "This account has been disabled."; TempData["Tab"] = "login"; return RedirectToPage(); }
@@ -62,7 +61,7 @@ public class IndexModel : PageModelBase
 
         try
         {
-            var hash = BCrypt.HashPassword(password);
+            var hash = BCrypt.Net.BCrypt.HashPassword(password);
             var uid = await Db.CreateAccountAsync(username, fullName, email, phone, country ?? "US", hash);
             HttpContext.Session.SetInt32("uid", uid);
             TempData["Flash"] = $"Welcome to FloFi, {fullName}!";
