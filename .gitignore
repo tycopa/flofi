@@ -1,0 +1,6 @@
+vendor/
+composer.phar
+.env
+*.env
+*.log
+/uploads/
